@@ -1,0 +1,239 @@
+                    The common packages description
+                    --------------------------------
+   The package is intended for use in the programs in which plotting closely
+connected with calculations and other actions and can be included in any
+ADA 95 program.
+   The graphic information is written to special *.mov file.
+In this file one record correspond to array of absolute "pen"  movings
+from 20 numbers. The first two numbers on the first record are the
+page size on X and Y. The negative meanings correspond to new "pen"
+coordinates , and positive line drawing.
+   The symbols table represents a textual file of a symbol plotting on a
+grid 100x100 not more than 16 pieces. Coordinates of pieces is packed by
+the formula 100X + Y, the negative meanings correspond to new "pen"
+coordinates , and positive drawing a piece of line. The first number is
+quantity of pieces. For the letter Z (90) we have:
+0006-1018 1111 1310 0603 1410 1011 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
+(in the given version are realized  symbols 32 ..254 that corresponds to
+the English,Russian,Greek letters , mathematical symbols and markers).
+  The *.mov file visualization  depends on operating system and easily
+can be included in any VISUAL ADA system because plotting only of a line piece
+or by  ADACAD.adb program it is possible to receive import file AutoCad.
+
+   The description of packages and procedures
+   ------------------------------------------
+Package ADAGRAPH is main system package
+
+procedure gffals(n:integer) ; -- Print Error information
+
+procedure grinit(    -- open adagraph system
+          fn:string:="adagraph.mov";  -- plotting file name
+          i_top:integer:=0;           -- pixel start in X
+          i_bot:integer:=199;         -- pixel end   in X
+          j_left:integer:=0;          -- pixel start in Y
+          j_right:integer:=319;       -- pixel end   in Y
+          al:integer:=16#0d#);        -- display mod
+ -- Parameters 2..6 may be used for direct DRAW in Visual system and
+ -- not used for drawing to *.mov file.
+
+procedure grfin(al:integer:=16#02#);  -- Close Adagraph system
+
+procedure page(   -- open Page
+               xl,yl:float;      -- page size (absolute means)
+               name:string;      -- page name
+               n,                -- symbol quantity
+               j:integer);       -- 1-bound draw, 0-bound not draw
+
+procedure symbol(  -- symbol draw
+                 x,y,              -- start coordinates
+                 size:float;       -- absolute size
+                 jtext:string;     -- string
+                 n:integer;        -- symbol quantity
+                 theta:float:=0.0);-- angle to X-axis in grad
+
+procedure number( -- draw float number
+                 x,y,               -- start coordinates
+                 z:float;           -- absolute size
+                 fnum:float;        -- number
+                 np:integer:=6;     -- symbol quantity
+                 th:float:=0.0);    -- angle to X-axis in grad
+
+procedure number( -- draw integer number
+                 x,y,               -- start coordinates
+                 z:float;           -- absolute size
+                 fnum:integer;      -- number
+                 np:integer:=6;     -- symbol quantity
+                 th:float:=0.0);    -- angle to X-axis in grad
+
+procedure marker(nm:integer:=0);    -- draw marker
+----------------------------------------------------------
+procedure move( -- move to
+               x,             -- move to x-coordinate
+               y:float;       -- move to y-coordinate
+               j:integer:=0); -- j=0 "pen" up (not draw) j=1 "pen" down draw
+
+procedure mova(
+               dl,            -- line length
+               th:float;      -- angle to X-axis
+               j:integer:=0);
+
+procedure movb(
+              dx,        -- delta x
+              dy:float;  -- delta y
+              j:integer:=0);
+
+procedure movc(
+               xm,           --  point on
+               ym,           --  line
+               dl:float;     --  line length
+               j:integer:=0);
+----------------------------------------------------------
+procedure italic(j:integer:=0);   -- font
+                                  -- j= 0 normal
+                                  -- j= 1 right slope (70 grad)
+                                  -- j=-1 left  slope  (110 grad)
+
+procedure set(j:integer:=0) ; -- in this version not used
+
+procedure where( -- "pen" coordinates
+                x,y, -- "pen" coordinates
+                f:in out float) ; -- system coefficient (from CM to MM or INCH)
+
+procedure pen(j:integer); -- "pen" number (color or thickness )
+----------------------------------------------------------
+procedure beglev;  -- open new sub picture
+procedure endlev;  -- close last sub picture
+procedure reset;   -- close all sub picture and return to picture
+----------------------------------------------------------
+procedure rotate( -- rotate system coordinate
+                 x,y, -- point coordinate
+                 psi:float); -- angle (grad)
+
+procedure pscale( -- stretching coordinate relatively to point
+                 x,y,
+                 rd:float); -- stretching coefficient ( rd<0.0 central symmetry )
+
+procedure lscale( -- stretching coordinate relatively to line
+                 x1,y1,x2,y2, -- line
+                 rd:float);   -- stretching coefficient ( rd<0.0 central symmetry )
+
+procedure transl( -- transferring beginning of system coordinate
+                 dx,dy:float) ; -- removal center
+----------------------------------------------------------
+procedure limits ( -- maximum and minimum argumet and function means
+                   xmin,xmax,ymin,ymax:float) ;
+
+procedure region( -- region for drawing on page
+                  x,y,              -- left low coner
+                  xl,yl:float;      -- region size
+                  name:string:=" "; -- region name
+                  n:integer:=0;     -- number of symbols
+                  j:integer:=0);    -- bound draw (1) no draw (0)
+----------------------------------------------------------
+function  angler(x,y:float) return float;  -- angler with X-axis
+
+procedure box(x,y,xl,yl:float);  -- rectangle
+
+procedure circle( -- cercle and spiral drawing
+                 xa,ya,         -- center coordinate
+                 th0,thf,       -- angle start and end radiuses to X-axis
+                 r0,            -- start radius
+                 rf:float;      -- end radius
+                 l:integer:=1); -- (1) -unbroken line (0) - broken line
+----------------------------------------------------------
+procedure tmf( -- connection mathematic coordinates with region
+               xm,ym:float;          -- mathematic coordinates
+               xf,yf:in out float);  -- point on page
+----------------------------------------------------------
+procedure line(points:matrix;n:integer); -- poly line n- number of points
+procedure line(x,y:vector;n:integer);
+
+procedure lineo(x,y:vector;n:integer);    -- polygon
+procedure lineo(points:matrix;n:integer);
+----------------------------------------------------------
+procedure mms;                             -- measure in MM
+procedure inches;                          -- measure in INCH
+----------------------------------------------------------
+end adagraph;
+
+
+        Package Adagraph.Curved -  Circle Drawing
+        -----------------------------------------
+package Adagraph.curved is
+procedure arcia(  -- circle arc
+                r,           -- radius (> 0.0 - opposite to hour-hand moving)
+                             --        (< 0.0 - hour-hand moving )
+                th0,         -- start angle
+                thf:float);  -- end angle
+
+procedure arcib( -- connection current point with required by circle arc
+                r:float;     -- radius (> 0.0 - opposite to hour-hand moving)
+                             --        (< 0.0 - hour-hand moving )
+
+                xf,yf:in out float; -- end point
+                j:integer);  -- (0) small arc (<=180 grad) (1) - long arc
+
+procedure arcang( -- connection current point with required
+                 r:in out float;   -- radius
+                 delx,dely:float;  --  removal
+                 j:integer;        -- as arcib
+                 th0a,thfa:in out  float);  -- start and end getting angles
+
+procedure arcic(  -- circle arc by point
+                xm,ym:in out float; -- add point
+                xf,yf:in out float; -- end point
+                j:integer);         -- (0) point on arc (1) - point no arc
+
+procedure arcid( -- circle arc
+                xc,yc,      -- center coordinates
+                phi:float); -- angle (abs (phi) <=360)
+                            -- (> 0.0 - opposite to hour-hand moving)
+                            -- (< 0.0 - hour-hand moving )
+end Adagraph.curved;
+
+            Package Adagraph.linedraw - Complex Line Drawing
+            -------------------------------------------------
+with Addtype; use Addtype;
+package  Adagraph.linedraw is
+-------------------------------------------------------------------
+-- fluent curve for table defined function
+procedure sincl(xb, -- x start
+                step:float; -- step
+                y:vector;   -- y table
+                n:integer); -- elements
+
+procedure sincl(x:vector;    -- x tablet
+                y:vector;    -- y table
+                nb,          -- number start
+                ne:integer); -- number end
+
+procedure sincl(xy:matrix;nb,ne:integer);
+
+                              Special Line
+                              --------------
+procedure DASHP(  --  broken line or one dot line
+X,                --  End Point X
+Y,                --  End Point Y
+DL: float) ;      --  Shade length ( dl > 0 - broken line
+                  --                 dl < 0 - one dot line
+
+procedure FATLIN(                      -- Wide Line
+                XF,                    -- End point X
+                YF,                    -- End point Y
+                D:float);              -- Line Wide (mm)
+
+procedure BROLIN(K:integer;XS1,YS1,XF1,YF1,S1,S2:float ) ;
+
+--   to draw a character line  (a wroken line, one dot-chain line
+--                              and two dot line )
+--   k        selective parameter of character line.
+--   k=1      broken line
+--   k=2      one dot chain line
+--   k=3      two dot chain lines
+--   xs1,ys1  starting point of the char.line
+--   xf1,yf1  an end point of the char. line
+--   s1       length of the wroken segment.
+--   s2       length of the dot and the space.
+
+end Adagraph.linedraw;
+
